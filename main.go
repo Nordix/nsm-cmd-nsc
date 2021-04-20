@@ -39,6 +39,8 @@ import (
 	"github.com/networkservicemesh/api/pkg/api/networkservice"
 	kernelmech "github.com/networkservicemesh/api/pkg/api/networkservice/mechanisms/kernel"
 	vfiomech "github.com/networkservicemesh/api/pkg/api/networkservice/mechanisms/vfio"
+	vlanmech "github.com/networkservicemesh/api/pkg/api/networkservice/mechanisms/vlan"
+	"github.com/networkservicemesh/sdk-kernel/pkg/kernel/networkservice/common/mechanisms/vlan"
 	"github.com/networkservicemesh/sdk-sriov/pkg/networkservice/common/mechanisms/vfio"
 	sriovtoken "github.com/networkservicemesh/sdk-sriov/pkg/networkservice/common/token"
 	"github.com/networkservicemesh/sdk/pkg/networkservice/chains/client"
@@ -156,6 +158,7 @@ func main() {
 			mechanisms.NewClient(map[string]networkservice.NetworkServiceClient{
 				vfiomech.MECHANISM:   chain.NewNetworkServiceClient(vfio.NewClient()),
 				kernelmech.MECHANISM: chain.NewNetworkServiceClient(kernel.NewClient()),
+				vlanmech.MECHANISM:   chain.NewNetworkServiceClient(vlan.NewClient()),
 			}),
 			sendfd.NewClient(),
 			dnscontext.NewClient(dnscontext.WithChainContext(ctx)),
@@ -197,15 +200,22 @@ func main() {
 			logger.Fatal(err.Error())
 		}
 
+		// Update the mechanism
+		mechanism := u.Mechanism()
+		labels := u.Labels()
+		if mechanism.Type == vlanmech.MECHANISM {
+			vlanmech.UpdateRequestParameters(mechanism, labels)
+		}
+
 		// Construct a request
 		request := &networkservice.NetworkServiceRequest{
 			Connection: &networkservice.Connection{
 				Id:             id,
 				NetworkService: u.NetworkService(),
-				Labels:         u.Labels(),
+				Labels:         labels,
 			},
 			MechanismPreferences: []*networkservice.Mechanism{
-				u.Mechanism(),
+				mechanism,
 			},
 		}
 
