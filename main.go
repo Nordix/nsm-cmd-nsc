@@ -200,22 +200,15 @@ func main() {
 			logger.Fatal(err.Error())
 		}
 
-		// Update the mechanism
-		mechanism := u.Mechanism()
-		labels := u.Labels()
-		if mechanism.Type == vlanmech.MECHANISM {
-			vlanmech.UpdateRequestParameters(mechanism, labels)
-		}
-
 		// Construct a request
 		request := &networkservice.NetworkServiceRequest{
 			Connection: &networkservice.Connection{
 				Id:             id,
 				NetworkService: u.NetworkService(),
-				Labels:         labels,
+				Labels:         u.Labels(),
 			},
 			MechanismPreferences: []*networkservice.Mechanism{
-				mechanism,
+				u.Mechanism(),
 			},
 		}
 
