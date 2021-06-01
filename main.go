@@ -149,8 +149,7 @@ func main() {
 	// ********************************************************************************
 	// Create Network Service Manager nsmClient
 	// ********************************************************************************
-	nsmClient := client.NewClient(ctx,
-		cc,
+	standardClientFactory := client.NewClientFactory(
 		client.WithName(c.Name),
 		client.WithAuthorizeClient(authorize.NewClient()),
 		client.WithAdditionalFunctionality(
@@ -162,7 +161,9 @@ func main() {
 			}),
 			sendfd.NewClient(),
 			dnscontext.NewClient(dnscontext.WithChainContext(ctx)),
-		))
+		),
+	)
+	nsmClient := standardClientFactory(ctx, cc)
 
 	monitorClient := networkservice.NewMonitorConnectionClient(cc)
 
